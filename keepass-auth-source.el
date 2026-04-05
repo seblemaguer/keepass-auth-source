@@ -69,7 +69,7 @@ If no entries match but multiple are found the user is prompted to select the au
         result))))
 
 (defun keepass-auth-source--parse (output port)
-  (let* ((results (s-split "\n\n" output))
+  (let* ((results (split-string output "\n\n" ))
          (status (-first-item results))
          (auths (--map (keepass-auth-source--parse-auth it port) (-drop-last 1 results))))
     `(,auths ,status)))
@@ -95,12 +95,13 @@ If no entries match but multiple are found the user is prompted to select the au
                                 ((password-read password-prompt entity)))))
                          (password-cache-add entity password)
                          password))
-             (keepass-command-base (s-join " "
-                                           '("kpscript -C:ListEntries"
-                                             "\"${db}\""
-                                             "-ref-Username:\"${user}\""
-                                             "-ref-URL:\"//${url}//\""
-                                             "-pw:\"${password}\"")))
+             (keepass-command-base (mapconcat 'identity
+                                              '("kpscript -C:ListEntries"
+                                                "\"${db}\""
+                                                "-ref-Username:\"${user}\""
+                                                "-ref-URL:\"//${url}//\""
+                                                "-pw:\"${password}\"")
+                                              " "))
              (keepass-command-fields `((db . ,(expand-file-name entity))
                                        (user . ,(or user ""))
                                        (url . ,(concat host path))
